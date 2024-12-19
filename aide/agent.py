@@ -150,27 +150,31 @@ class Agent:
             )
         }
 
-    def plan_and_code_query(self, prompt, retries=3) -> tuple[str, str]:
+    def plan_and_code_query(self, prompt, retries=15) -> tuple[str, str, float, int]:
         """Generate a natural language plan + code in the same LLM call and split them apart."""
         completion_text = None
+        wait_time = 0
+        total_tokens_count = 0
         for _ in range(retries):
-            completion_text = query(
+            completion_text, t_time, t_tokens_count = query(
                 system_message=prompt,
                 user_message=None,
                 model=self.acfg.code.model,
                 temperature=self.acfg.code.temp,
             )
+            total_tokens_count += t_tokens_count
+            wait_time += t_time
 
             code = extract_code(completion_text)
             nl_text = extract_text_up_to_code(completion_text)
 
             if code and nl_text:
                 # merge all code blocks into a single string
-                return nl_text, code
+                return nl_text, code, wait_time, total_tokens_count
 
             print("Plan + code extraction failed, retrying...")
         print("Final plan + code extraction attempt failed, giving up...")
-        return "", completion_text  # type: ignore
+        return "", completion_text, wait_time, total_tokens_count  # type: ignore
 
     def _draft(self) -> Node:
         prompt: Any = {
@@ -201,8 +205,8 @@ class Agent:
         if self.acfg.data_preview:
             prompt["Data Overview"] = self.data_preview
 
-        plan, code = self.plan_and_code_query(prompt)
-        return Node(plan=plan, code=code)
+        plan, code, wait_time, total_tokens_count = self.plan_and_code_query(prompt)
+        return Node(plan=plan, code=code, wait_time=wait_time, total_tokens_count=total_tokens_count)
 
     def _improve(self, parent_node: Node) -> Node:
         prompt: Any = {
@@ -233,11 +237,13 @@ class Agent:
         }
         prompt["Instructions"] |= self._prompt_impl_guideline
 
-        plan, code = self.plan_and_code_query(prompt)
+        plan, code, wait_time, total_tokens_count = self.plan_and_code_query(prompt)
         return Node(
             plan=plan,
             code=code,
             parent=parent_node,
+            wait_time=wait_time,
+            total_tokens_count=total_tokens_count
         )
 
     def _debug(self, parent_node: Node) -> Node:
@@ -265,8 +271,8 @@ class Agent:
         if self.acfg.data_preview:
             prompt["Data Overview"] = self.data_preview
 
-        plan, code = self.plan_and_code_query(prompt)
-        return Node(plan=plan, code=code, parent=parent_node)
+        plan, code, wait_time, total_tokens_count = self.plan_and_code_query(prompt)
+        return Node(plan=plan, code=code, parent=parent_node, wait_time=wait_time, total_tokens_count=total_tokens_count)
 
     def update_data_preview(
         self,

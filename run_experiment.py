@@ -15,7 +15,7 @@ if __name__ == '__main__':
            Your goal is to predict the target column `c_10`.
            Perform data analysis, data preprocessing, feature engineering, and modeling to predict the target. 
            ## Do not split the train_data into train and test sets. Use only the given datasets.
-           ## Don't report validation part (Only and Only report Train and Test model evaluation)
+           ## Don't report model validation part (Only and Only report Train and Test model evaluation).
            
            Code formatting for multiclass classification evaluation:
            # Report evaluation based on train and test dataset
@@ -44,8 +44,8 @@ if __name__ == '__main__':
         log_dir="/home/saeed/Downloads/AIDE/log/",
         workspace_dir="/home/saeed/Downloads/AIDE/workspace/",
         exp_name="DS1",
-        iterations=2,
-        llm_model="gemini-1.5-pro-latest",
+        iterations=1,
+        llm_model="llama-3.1-70b-versatile", #"gemini-1.5-pro-latest",
         config_path="Config.yaml",
         api_config_path="APIKeys.yaml",
         rules_path= "Rules.yaml",

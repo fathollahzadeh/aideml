@@ -81,4 +81,4 @@ def query(
         "created": completion.created,
     }
 
-    return output, req_time, in_tokens, out_tokens, info
+    return output, 0, in_tokens, out_tokens, info

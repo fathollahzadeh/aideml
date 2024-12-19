@@ -3,9 +3,6 @@
 import logging
 import time
 import google.generativeai as genai
-from google.generativeai.types import content_types
-from funcy import notnone, select_values
-
 from .utils import FunctionSpec, OutputType
 
 
@@ -25,14 +22,12 @@ def query(
         **model_kwargs,
 ) -> tuple[OutputType, float, int, int, dict]:
     _setup_gemini_client()
-    filtered_kwargs = dict() #= select_values(notnone, model_kwargs)  # type: ignore
-    # if func_spec is not None:
-    #     filtered_kwargs["tools"] = [func_spec.as_openai_tool_dict]
-    #     # force the model the use the function
-    #     filtered_kwargs["tool_choice"] = func_spec.openai_tool_choice_dict
-    # print(f">>>>>>>>>>>>>>>>>>>>>>>>>>>>> {filtered_kwargs}")
+    filtered_kwargs = dict()
+    time_start = time.time()
     output, req_time, in_tokens, out_tokens, info = __submit_Request_Gemini_LLM(user_message=user_message, system_message=system_message, **filtered_kwargs)
-    return output, req_time, in_tokens, out_tokens, info
+    time_end = time.time()
+    wait_time = time_end - time_start - req_time
+    return output, wait_time, in_tokens, out_tokens, info
 
 
 def __submit_Request_Gemini_LLM(user_message: str, system_message: str, **kwargs) -> tuple[OutputType, float, int, int, dict]:
@@ -58,11 +53,12 @@ def __submit_Request_Gemini_LLM(user_message: str, system_message: str, **kwargs
         prompt = []
         if system_message is not None:
             prompt.append(system_message)
-        elif user_message is not None:
+        if user_message is not None:
             prompt.append(user_message)
 
         message = "\n".join(prompt)
-        number_of_tokens = model.count_tokens(message).total_tokens
+        in_tokens = model.count_tokens(message).total_tokens
+
         chat_session = model.start_chat(
             history=[{
                 "role": "user",
@@ -71,8 +67,9 @@ def __submit_Request_Gemini_LLM(user_message: str, system_message: str, **kwargs
 
         response = chat_session.send_message("INSERT_INPUT_HERE")
         code = response.text
+        out_tokens = model.count_tokens(code).total_tokens
         time_end = time.time()
-        return code, time_end - time_start, number_of_tokens, 0, dict()
+        return code, time_end - time_start, in_tokens, out_tokens, dict()
 
     except Exception as err:
         _setup_gemini_client()

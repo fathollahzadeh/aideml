@@ -26,10 +26,13 @@ def query(
         **model_kwargs,
 ) -> tuple[OutputType, float, int, int, dict]:
     _setup_llama_client()
+    time_start = time.time()
     output, req_time, in_tokens, out_tokens, info = __submit_Request_LLaMa_LLM(user_message=user_message,
                                                                                system_message=system_message,
                                                                                client=client)
-    return output, req_time, in_tokens, out_tokens, info
+    time_end = time.time()
+    wait_time = time_end - time_start - req_time
+    return output, wait_time, in_tokens, out_tokens, info
 
 
 def __submit_Request_LLaMa_LLM(user_message: str, system_message: str, client) -> tuple[
@@ -54,7 +57,6 @@ def __submit_Request_LLaMa_LLM(user_message: str, system_message: str, client) -
         content = __refine_text(content)
         codes = []
         code_blocks = __match_code_blocks(content)
-        code = None
         if len(code_blocks) > 0:
             for code in code_blocks:
                 codes.append(code)
@@ -62,10 +64,11 @@ def __submit_Request_LLaMa_LLM(user_message: str, system_message: str, client) -
             code = "\n".join(codes)
         else:
             code = content
-        print(code)
-        print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-        return code, time.time() - time_start, get_number_tokens(user_message=user_message, system_message=system_message), 0, dict()
-    except Exception:
+        in_tokens = get_number_tokens(user_message=user_message, system_message=system_message)
+        out_tokens = get_number_tokens(user_message=code, system_message="")
+
+        return code, time.time() - time_start, in_tokens, out_tokens, dict()
+    except Exception as ee:
         _setup_llama_client()
         return __submit_Request_LLaMa_LLM(user_message=user_message, system_message=system_message, client=client)
 
@@ -101,6 +104,12 @@ def __refine_text(text):
 def get_number_tokens(user_message: str, system_message: str):
     enc = tiktoken.get_encoding("cl100k_base")
     enc = tiktoken.encoding_for_model("gpt-3.5-turbo")
-    token_integers = enc.encode(user_message + system_message)
+    sm = system_message
+    um = user_message
+    if system_message is None:
+        sm = ""
+    if user_message is None:
+        um = ""
+    token_integers = enc.encode(sm + um)
     num_tokens = len(token_integers)
     return num_tokens

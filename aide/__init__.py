@@ -18,7 +18,7 @@ from .utils.config import (
     SearchConfig,
     AgentConfig
 )
-
+import time
 
 @dataclass
 class Solution:
@@ -73,8 +73,17 @@ class Experiment:
 
     def run(self, steps: int):
         for _i in range(steps):
+            time_start = time.time()
             self.agent.step(exec_callback=self.interpreter.run)
+            time_end = time.time()
+            wait_time = self.journal.nodes[0].wait_time
+            total_time = time_end - time_start - wait_time
             save_run(self.cfg, self.journal)
+
+            print(f"++++++++++++++++++++++ {_i}")
+            print(self.journal.nodes[0].term_out)
+            print(f"tokens= {self.journal.nodes[0].total_tokens_count}")
+            print(f"time = {total_time}")
         self.interpreter.cleanup_session()
 
         # best_node = self.journal.get_best_node(only_good=False)

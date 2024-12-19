@@ -25,6 +25,8 @@ class Node(DataClassJsonMixin):
     # ---- code & plan ----
     code: str
     plan: str = field(default=None, kw_only=True)  # type: ignore
+    wait_time: float
+    total_tokens_count: int
 
     # ---- general attrs ----
     step: int = field(default=None, kw_only=True)  # type: ignore

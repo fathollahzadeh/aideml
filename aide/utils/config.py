@@ -321,10 +321,10 @@ def save_run(cfg: Config, journal):
     # save journal
     serialize.dump_json(journal, cfg.log_dir / "journal.json")
     # save config
-    OmegaConf.save(config=cfg, f=cfg.log_dir / "config.yaml")
-    # create the tree + code visualization
-    tree_export.generate(cfg, journal, cfg.log_dir / "tree_plot.html")
-    # save the best found solution
-    best_node = journal.get_best_node(only_good=False)
-    with open(cfg.log_dir / "best_solution.py", "w") as f:
-        f.write(best_node.code)
+    # OmegaConf.save(config=cfg, f=cfg.log_dir / "config.yaml")
+    # # create the tree + code visualization
+    # tree_export.generate(cfg, journal, cfg.log_dir / "tree_plot.html")
+    # # save the best found solution
+    # best_node = journal.get_best_node(only_good=False)
+    # with open(cfg.log_dir / "best_solution.py", "w") as f:
+    #     f.write(best_node.code)

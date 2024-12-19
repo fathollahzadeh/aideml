@@ -49,4 +49,4 @@ def query(
         func_spec=func_spec,
         **model_kwargs,
     )
-    return output
+    return output, req_time, in_tok_count + out_tok_count
