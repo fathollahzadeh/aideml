@@ -23,7 +23,9 @@ OPENAI_TIMEOUT_EXCEPTIONS = (
 @once
 def _setup_openai_client():
     global _client
-    _client = openai.OpenAI(max_retries=0)
+    from ..utils.config import _LLM_API_Key
+    _, api_key = _LLM_API_Key.get_API_Key()
+    _client = openai.OpenAI(max_retries=0, api_key=api_key)
 
 
 def query(

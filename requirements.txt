@@ -5,6 +5,7 @@ humanize==4.8.0
 jsonschema==4.19.2
 numpy==1.26.2
 openai>=1.3.5
+google-generativeai
 anthropic>=0.20.0
 pandas==2.1.4
 pytest==7.4.3
@@ -92,3 +93,6 @@ xlrd
 backoff
 streamlit==1.40.2
 python-dotenv
+
+catboost
+tiktoken==0.7

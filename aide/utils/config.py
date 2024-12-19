@@ -11,9 +11,12 @@ from rich.syntax import Syntax
 import shutup
 from rich.logging import RichHandler
 import logging
+import os
+import yaml
 
 from . import tree_export
 from . import copytree, preproc_data, serialize
+from .LLM_API_Key import LLM_API_Key
 
 shutup.mute_warnings()
 logging.basicConfig(
@@ -22,6 +25,32 @@ logging.basicConfig(
 logger = logging.getLogger("aide")
 logger.setLevel(logging.WARNING)
 
+default_max_token_limit = 4096
+default_max_output_tokens = 8192
+default_delay = 0
+default_temperature = 0
+default_top_p = 0.95
+default_top_k = 64
+
+_OPENAI = "OpenAI"
+_META = "Meta"
+_GOOGLE = "Google"
+
+_llm_model = None
+_llm_platform = None
+_max_token_limit = None
+_max_out_token_limit = None
+_delay = None
+_temperature = None
+_top_p = None
+_top_k = None
+_last_API_Key = None
+_LLM_API_Key = None
+
+_CODE_FORMATTING_BINARY_EVALUATION = None
+_CODE_FORMATTING_MULTICLASS_EVALUATION = None
+_CODE_FORMATTING_REGRESSION_EVALUATION = None
+_CODE_FORMATTING_ACC_EVALUATION = None
 
 """ these dataclasses are just for type hinting, the actual config is in config.yaml """
 
@@ -93,8 +122,110 @@ def _get_next_logindex(dir: Path) -> int:
     return max_index + 1
 
 
+def _load_catdb_style_config(llm_model: str = None,
+                             config_path: str = "Config.yaml",
+                             api_config_path: str = None,
+                             rules_path: str = "Rules.yaml",
+                             evaluation_acc: bool = False):
+    if api_config_path is None:
+        api_config_path = os.environ.get("APIKeys_File")
+    global _llm_model
+    global _llm_platform
+    global _max_token_limit
+    global _max_out_token_limit
+    global _delay
+    global _last_API_Key
+    global _LLM_API_Key
+    global _temperature
+    global _top_k
+    global _top_p
+
+    with open(config_path, "r") as f:
+        try:
+            configs = yaml.load(f, Loader=yaml.FullLoader)
+            for conf in configs:
+                plt = conf.get("llm_platform")
+                try:
+                    if conf.get(llm_model) is not None:
+                        _llm_model = llm_model
+                        _llm_platform = plt
+
+                        try:
+                            _max_token_limit = int(conf.get(llm_model).get('token_limit'))
+                        except:
+                            _max_token_limit = default_max_token_limit
+
+                        try:
+                            _max_out_token_limit = int(conf.get(llm_model).get('max_output_tokens'))
+                        except:
+                            _max_out_token_limit = default_max_output_tokens
+
+                        try:
+                            _delay = int(conf.get(llm_model).get('delay'))
+                        except:
+                            _delay = default_delay
+
+                        try:
+                            _temperature = float(conf.get(llm_model).get('temperature'))
+                        except:
+                            _temperature = default_temperature
+
+                        try:
+                            _top_k = int(conf.get(llm_model).get('top_k'))
+                        except:
+                            _top_k = default_top_k
+
+                        try:
+                            _top_p = float(conf.get(llm_model).get('top_p'))
+                        except:
+                            _top_p = default_top_p
+
+                        break
+                except Exception as ex:
+                    pass
+
+        except yaml.YAMLError as ex:
+            raise Exception(ex)
+
+        if _llm_model is None:
+            raise Exception(f'Error: model "{llm_model}" is not in the Config.yaml list!')
+
+        _LLM_API_Key = LLM_API_Key(api_config_path=api_config_path)
+        load_rules(rules_path=rules_path, evaluation_acc=evaluation_acc)
+
+
+
+def load_rules(rules_path: str, evaluation_acc: bool = False):
+    global _CODE_FORMATTING_BINARY_EVALUATION
+    global _CODE_FORMATTING_MULTICLASS_EVALUATION
+    global _CODE_FORMATTING_REGRESSION_EVALUATION
+    global _CODE_FORMATTING_ACC_EVALUATION
+
+    with (open(rules_path, "r") as f):
+        try:
+            configs = yaml.load(f, Loader=yaml.FullLoader)
+            for conf in configs:
+                plt = conf.get("Config")
+                if plt == 'CodeFormat':
+                    for k, v in conf.items():
+                        if k == 'CODE_FORMATTING_BINARY_EVALUATION':
+                            _CODE_FORMATTING_BINARY_EVALUATION = v
+                        elif k == 'CODE_FORMATTING_ACC_EVALUATION':
+                            _CODE_FORMATTING_ACC_EVALUATION = v
+                        elif k == 'CODE_FORMATTING_MULTICLASS_EVALUATION':
+                            _CODE_FORMATTING_MULTICLASS_EVALUATION = v
+                        elif k == 'CODE_FORMATTING_REGRESSION_EVALUATION':
+                            _CODE_FORMATTING_REGRESSION_EVALUATION = v
+        except yaml.YAMLError as ex:
+            raise Exception(ex)
+
+    if evaluation_acc:
+        _CODE_FORMATTING_BINARY_EVALUATION = _CODE_FORMATTING_ACC_EVALUATION
+        _CODE_FORMATTING_MULTICLASS_EVALUATION = _CODE_FORMATTING_ACC_EVALUATION
+
+
 def _load_cfg(
-    path: Path = Path(__file__).parent / "config.yaml", use_cli_args=True
+        path: Path = Path(__file__).parent / "config.yaml", use_cli_args=True
 ) -> Config:
     cfg = OmegaConf.load(path)
     if use_cli_args:
