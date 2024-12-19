@@ -10,7 +10,6 @@ from .utils.config import (
     prep_agent_workspace,
     save_run,
     _load_cfg,
-    _load_catdb_style_config,
     prep_cfg,
     Config,
     ExecConfig,
@@ -19,6 +18,7 @@ from .utils.config import (
     AgentConfig
 )
 import time
+from .utils.LogResults import LogResults
 
 @dataclass
 class Solution:
@@ -29,8 +29,8 @@ class Solution:
 class Experiment:
 
 
-    def __init__(self, data_dir: str, goal: str, log_dir: str, workspace_dir: str, exp_name: str, iterations: int ,llm_model: str = None,  config_path: str = "Config.yaml",
-    api_config_path: str = None, rules_path: str = "Rules.yaml", evaluation_acc: bool = False, eval: str | None = None):
+    def __init__(self, data_dir: str, goal: str, log_dir: str, workspace_dir: str, exp_name: str, iterations: int,
+                 dataset_name: str, task_type: str, out_path:str,  eval: str | None = None):
         """Initialize a new experiment run.
 
         Args:
@@ -38,10 +38,9 @@ class Experiment:
             goal (str): Description of the goal of the task.
             eval (str | None, optional): Optional description of the preferred way for the agent to evaluate its solutions.
         """
-
-        _load_catdb_style_config(llm_model=llm_model, config_path=config_path, api_config_path=api_config_path,
-                                 rules_path=rules_path, evaluation_acc=evaluation_acc)
-
+        self.dataset_name = dataset_name
+        self.task_type = task_type
+        self.out_path = out_path
 
         from .utils.config import  _temperature, _llm_model
         ec = ExecConfig(timeout=3600, format_tb_ipython=False, agent_file_name='runfile.py')
@@ -79,12 +78,45 @@ class Experiment:
             wait_time = self.journal.nodes[0].wait_time
             total_time = time_end - time_start - wait_time
             save_run(self.cfg, self.journal)
-
-            print(f"++++++++++++++++++++++ {_i}")
-            print(self.journal.nodes[0].term_out)
-            print(f"tokens= {self.journal.nodes[0].total_tokens_count}")
-            print(f"time = {total_time}")
+            self.save_log(self.journal.nodes[0].term_out, step=_i+1, total_time=total_time, execution_time=self.journal.nodes[0].exec_time, tokens=self.journal.nodes[0].total_tokens_count)
         self.interpreter.cleanup_session()
 
         # best_node = self.journal.get_best_node(only_good=False)
         # return Solution(code=best_node.code, valid_metric=best_node.metric.value)
+
+    def save_log(self, results, step, total_time, execution_time, tokens):
+        pipeline_evl = {"Train_AUC": -2,
+                        "Train_AUC_OVO": -2,
+                        "Train_AUC_OVR": -2,
+                        "Train_Accuracy": -2,
+                        "Train_F1_score": -2,
+                        "Train_Log_loss": -2,
+                        "Train_R_Squared": -2,
+                        "Train_RMSE": -2,
+                        "Test_AUC": -2,
+                        "Test_AUC_OVO": -2,
+                        "Test_AUC_OVR": -2,
+                        "Test_Accuracy": -2,
+                        "Test_F1_score": -2,
+                        "Test_Log_loss": -2,
+                        "Test_R_Squared": -2,
+                        "Test_RMSE": -2}
+        if results is not None:
+            raw_results = results.splitlines()
+            for rr in raw_results:
+                row = rr.strip().split(":")
+                if row[0] in pipeline_evl.keys():
+                    pipeline_evl[row[0]] = row[1].strip()
+
+        from .utils.config import _llm_model
+        log_results = LogResults(dataset_name=self.dataset_name,
+                                 config="AIDE", sub_task="", llm_model=_llm_model, classifier="Auto", task_type= self.task_type,
+                                 status="True", number_iteration=step, number_iteration_error=0, has_description="No", time_catalog_load=0,
+                                 time_pipeline_generate=0, time_total=total_time, time_execution=execution_time, train_auc=pipeline_evl["Train_AUC"],
+                                 train_auc_ovo=pipeline_evl["Train_AUC_OVO"] , train_auc_ovr= pipeline_evl["Train_AUC_OVR"], train_accuracy=pipeline_evl["Train_Accuracy"],
+                                 train_f1_score=pipeline_evl["Train_F1_score"], train_log_loss=pipeline_evl["Train_Log_loss"], train_r_squared=pipeline_evl["Train_R_Squared"], train_rmse=pipeline_evl["Train_RMSE"],
+                                 test_auc=pipeline_evl["Test_AUC"], test_auc_ovo=pipeline_evl["Test_AUC_OVO"],  test_auc_ovr=pipeline_evl["Test_AUC_OVR"], test_accuracy=pipeline_evl["Test_Accuracy"],
+                                 test_f1_score=pipeline_evl["Test_F1_score"], test_log_loss=pipeline_evl["Test_Log_loss"], test_r_squared=pipeline_evl["Test_R_Squared"], test_rmse=pipeline_evl["Test_RMSE"],
+                                 prompt_token_count=tokens,all_token_count=tokens, operation="Run-Pipeline", number_of_samples=0)
+
+        log_results.save_results(result_output_path=self.out_path)
