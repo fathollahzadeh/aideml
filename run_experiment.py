@@ -13,7 +13,6 @@ def parse_arguments():
     parser.add_argument('--output-path', type=str, default=None)
     parser.add_argument('--llm-model', type=str, default=None)
     parser.add_argument('--result-output-path', type=str, default="/tmp/results.csv")
-    parser.add_argument('--run-code', type=bool, default=False)
     parser.add_argument('--system-log', type=str, default="/tmp/catdb-system-log.dat")
 
     args = parser.parse_args()
