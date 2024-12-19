@@ -309,31 +309,32 @@ class Agent:
             "Execution output": wrap_code(node.term_out, lang=""),
         }
 
-        response = cast(
-            dict,
-            query(
-                system_message=prompt,
-                user_message=None,
-                func_spec=review_func_spec,
-                model=self.acfg.feedback.model,
-                temperature=self.acfg.feedback.temp,
-            ),
-        )
-
-        # if the metric isn't a float then fill the metric with the worst metric
-        if not isinstance(response["metric"], float):
-            response["metric"] = None
-
-        node.analysis = response["summary"]
-        node.is_buggy = (
-            response["is_bug"]
-            or node.exc_type is not None
-            or response["metric"] is None
-        )
-
-        if node.is_buggy:
-            node.metric = WorstMetricValue()
-        else:
-            node.metric = MetricValue(
-                response["metric"], maximize=not response["lower_is_better"]
+        from .utils.config import _llm_platform
+        if _llm_platform == "openai":
+            response = cast(
+                dict,
+                query(
+                    system_message=prompt,
+                    user_message=None,
+                    func_spec=review_func_spec,
+                    model=self.acfg.feedback.model,
+                    temperature=self.acfg.feedback.temp,
+                ),
             )
+            # if the metric isn't a float then fill the metric with the worst metric
+            if not isinstance(response["metric"], float):
+                response["metric"] = None
+
+            node.analysis = response["summary"]
+            node.is_buggy = (
+                response["is_bug"]
+                or node.exc_type is not None
+                or response["metric"] is None
+            )
+
+            if node.is_buggy:
+                node.metric = WorstMetricValue()
+            else:
+                node.metric = MetricValue(
+                    response["metric"], maximize=not response["lower_is_better"]
+                )

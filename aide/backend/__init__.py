@@ -42,8 +42,6 @@ def query(
         system_message = None
         model_kwargs["temperature"] = 1
 
-    ###
-    ###
     #query_func = backend_anthropic.query if "claude-" in model else backend_openai.query
     output, req_time, in_tok_count, out_tok_count, info = GenerateLLMCode.generate_llm_code(
         system_message=compile_prompt_to_md(system_message) if system_message else None,
@@ -51,5 +49,4 @@ def query(
         func_spec=func_spec,
         **model_kwargs,
     )
-
     return output

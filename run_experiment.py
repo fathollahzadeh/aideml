@@ -14,6 +14,9 @@ if __name__ == '__main__':
     goal = f"""
            Your goal is to predict the target column `c_10`.
            Perform data analysis, data preprocessing, feature engineering, and modeling to predict the target. 
+           ## Do not split the train_data into train and test sets. Use only the given datasets.
+           ## Don't report validation part (Only and Only report Train and Test model evaluation)
+           
            Code formatting for multiclass classification evaluation:
            # Report evaluation based on train and test dataset
            # Calculate the model accuracy, represented by a value between 0 and 1, where 0 indicates low accuracy and 1 signifies higher accuracy. Store the accuracy value in a variable labeled as "Train_Accuracy=..." and "Test_Accuracy=...".
@@ -41,9 +44,9 @@ if __name__ == '__main__':
         log_dir="/home/saeed/Downloads/AIDE/log/",
         workspace_dir="/home/saeed/Downloads/AIDE/workspace/",
         exp_name="DS1",
-        iterations=1,
+        iterations=2,
         llm_model="gemini-1.5-pro-latest",
-        config_path= "Config.yaml",
+        config_path="Config.yaml",
         api_config_path="APIKeys.yaml",
         rules_path= "Rules.yaml",
         evaluation_acc = False,

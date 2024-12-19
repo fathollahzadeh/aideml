@@ -44,7 +44,7 @@ class Experiment:
 
 
         from .utils.config import  _temperature, _llm_model
-        ec = ExecConfig(timeout=300, format_tb_ipython=False, agent_file_name='runfile.py')
+        ec = ExecConfig(timeout=3600, format_tb_ipython=False, agent_file_name='runfile.py')
         ac = AgentConfig(steps=iterations, k_fold_validation=1, expose_prediction=False, data_preview=False,
                          code=StageConfig(model=_llm_model, temp=_temperature),
                          feedback=StageConfig(model=_llm_model, temp=_temperature),
@@ -71,11 +71,11 @@ class Experiment:
             self.cfg.workspace_dir, **OmegaConf.to_container(self.cfg.exec)  # type: ignore
         )
 
-    def run(self, steps: int) -> Solution:
+    def run(self, steps: int):
         for _i in range(steps):
             self.agent.step(exec_callback=self.interpreter.run)
             save_run(self.cfg, self.journal)
         self.interpreter.cleanup_session()
 
-        best_node = self.journal.get_best_node(only_good=False)
-        return Solution(code=best_node.code, valid_metric=best_node.metric.value)
+        # best_node = self.journal.get_best_node(only_good=False)
+        # return Solution(code=best_node.code, valid_metric=best_node.metric.value)

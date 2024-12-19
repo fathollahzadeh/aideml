@@ -9,7 +9,7 @@ import tiktoken
 from .utils import FunctionSpec, OutputType
 
 logger = logging.getLogger("aide")
-client: Groq = None
+client: None
 
 
 def _setup_llama_client():
@@ -62,6 +62,8 @@ def __submit_Request_LLaMa_LLM(user_message: str, system_message: str, client) -
             code = "\n".join(codes)
         else:
             code = content
+        print(code)
+        print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
         return code, time.time() - time_start, get_number_tokens(user_message=user_message, system_message=system_message), 0, dict()
     except Exception:
         _setup_llama_client()
