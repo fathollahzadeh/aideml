@@ -9,7 +9,8 @@ def parse_arguments():
     parser = ArgumentParser()
     parser.add_argument('--metadata-path', type=str, default=None)
     parser.add_argument('--root-data-path', type=str, default=None)
-    parser.add_argument('--prompt-number-iteration', type=int, default=1)
+    parser.add_argument('--steps', type=int, default=20)
+    parser.add_argument('--iteration', type=int, default=1)
     parser.add_argument('--output-path', type=str, default=None)
     parser.add_argument('--llm-model', type=str, default=None)
     parser.add_argument('--result-output-path', type=str, default="/tmp/")
@@ -94,11 +95,10 @@ if __name__ == '__main__':
         log_dir=f"{args.result_output_path}/log/",
         workspace_dir=f"{args.result_output_path}/workspace/",
         exp_name="EXP",
-        iterations=1,
+        steps=args.steps,
         eval=metric,
         dataset_name=args.dataset_name,
         out_path=args.output_path,
         task_type=args.task_type
     )
-    for i in range(1, args.prompt_number_iteration+1):
-        exp.run(steps=i)
+    exp.run(steps=args.iteration)

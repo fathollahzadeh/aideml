@@ -29,7 +29,7 @@ class Solution:
 class Experiment:
 
 
-    def __init__(self, data_dir: str, goal: str, log_dir: str, workspace_dir: str, exp_name: str, iterations: int,
+    def __init__(self, data_dir: str, goal: str, log_dir: str, workspace_dir: str, exp_name: str, steps: int,
                  dataset_name: str, task_type: str, out_path:str,  eval: str | None = None):
         """Initialize a new experiment run.
 
@@ -44,7 +44,7 @@ class Experiment:
 
         from .utils.config import  _temperature, _llm_model
         ec = ExecConfig(timeout=3600, format_tb_ipython=False, agent_file_name='runfile.py')
-        ac = AgentConfig(steps=iterations, k_fold_validation=1, expose_prediction=False, data_preview=False,
+        ac = AgentConfig(steps=steps, k_fold_validation=1, expose_prediction=False, data_preview=False,
                          code=StageConfig(model=_llm_model, temp=_temperature),
                          feedback=StageConfig(model=_llm_model, temp=_temperature),
                          search=SearchConfig(max_debug_depth=3, debug_prob=0.5, num_drafts=5))
