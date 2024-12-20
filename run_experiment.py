@@ -2,7 +2,7 @@ import aide
 
 from argparse import ArgumentParser
 import yaml
-from .aide.utils.config import _load_catdb_style_config
+from aide.utils.config import _load_catdb_style_config
 
 
 def parse_arguments():
@@ -22,9 +22,6 @@ def parse_arguments():
 
     if args.root_data_path is None:
         raise Exception("--root-data-path is a required parameter!")
-
-    if args.catalog_path is None:
-        raise Exception("--catalog-path is a required parameter!")
 
     # read .yaml file and extract values:
     with open(args.metadata_path, "r") as f:
@@ -64,7 +61,7 @@ if __name__ == '__main__':
     _load_catdb_style_config(llm_model=args.llm_model, config_path="Config.yaml", api_config_path="APIKeys.yaml",
                              rules_path="Rules.yaml", evaluation_acc=args.dataset_name == "EU-IT")
 
-    from .aide.utils.config import (_CODE_FORMATTING_BINARY_EVALUATION, _CODE_FORMATTING_MULTICLASS_EVALUATION,
+    from aide.utils.config import (_CODE_FORMATTING_BINARY_EVALUATION, _CODE_FORMATTING_MULTICLASS_EVALUATION,
                                     _CODE_FORMATTING_REGRESSION_EVALUATION)
 
     code_format = ""
