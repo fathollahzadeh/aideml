@@ -51,8 +51,8 @@ def parse_arguments():
     if args.llm_model is None:
         raise Exception("--llm-model is a required parameter!")
 
-    if args.prompt_number_iteration is None:
-        args.prompt_number_iteration = 1
+    if args.iteration is None:
+        args.iteration = 1
 
     return args
 
@@ -81,6 +81,7 @@ if __name__ == '__main__':
            Your goal is to predict the target column `{args.target_attribute}`.
            Perform data analysis, data preprocessing, feature engineering, and modeling to predict the target. 
            ## Do not split the train_data into train and test sets. Use only the given datasets.
+           ## In order to avoid runtime error for unseen value on the target feature, do preprocessing based on union of train and test dataset.
            ## Don't report model validation part (Only and Only report Train and Test model evaluation).
            
            ##{code_format} 
