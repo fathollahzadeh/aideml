@@ -94,11 +94,11 @@ if __name__ == '__main__':
         goal=goal,
         log_dir=f"{args.result_output_path}/log/",
         workspace_dir=f"{args.result_output_path}/workspace/",
-        exp_name="EXP",
+        exp_name=f"EXP-itr-{args.iteration}",
         steps=args.steps,
         eval=metric,
         dataset_name=args.dataset_name,
         out_path=args.output_path,
         task_type=args.task_type
     )
-    exp.run(steps=args.iteration)
+    exp.run(iteration=args.iteration)

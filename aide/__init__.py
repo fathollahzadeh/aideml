@@ -70,20 +70,20 @@ class Experiment:
             self.cfg.workspace_dir, **OmegaConf.to_container(self.cfg.exec)  # type: ignore
         )
 
-    def run(self, steps: int):
+    def run(self, iteration: int):
             time_start = time.time()
             self.agent.step(exec_callback=self.interpreter.run)
             time_end = time.time()
             wait_time = self.journal.nodes[0].wait_time
             total_time = time_end - time_start - wait_time
             save_run(self.cfg, self.journal)
-            self.save_log(self.journal.nodes[0].term_out, step=steps, total_time=total_time, execution_time=self.journal.nodes[0].exec_time, tokens=self.journal.nodes[0].total_tokens_count)
+            self.save_log(self.journal.nodes[0].term_out, iteration=iteration, total_time=total_time, execution_time=self.journal.nodes[0].exec_time, tokens=self.journal.nodes[0].total_tokens_count)
             self.interpreter.cleanup_session()
 
         # best_node = self.journal.get_best_node(only_good=False)
         # return Solution(code=best_node.code, valid_metric=best_node.metric.value)
 
-    def save_log(self, results, step, total_time, execution_time, tokens):
+    def save_log(self, results, iteration, total_time, execution_time, tokens):
         pipeline_evl = {"Train_AUC": -2,
                         "Train_AUC_OVO": -2,
                         "Train_AUC_OVR": -2,
@@ -110,7 +110,7 @@ class Experiment:
         from .utils.config import _llm_model
         log_results = LogResults(dataset_name=self.dataset_name,
                                  config="AIDE", sub_task="", llm_model=_llm_model, classifier="Auto", task_type= self.task_type,
-                                 status="True", number_iteration=step, number_iteration_error=0, has_description="No", time_catalog_load=0,
+                                 status="True", number_iteration=iteration, number_iteration_error=0, has_description="No", time_catalog_load=0,
                                  time_pipeline_generate=0, time_total=total_time, time_execution=execution_time, train_auc=pipeline_evl["Train_AUC"],
                                  train_auc_ovo=pipeline_evl["Train_AUC_OVO"] , train_auc_ovr= pipeline_evl["Train_AUC_OVR"], train_accuracy=pipeline_evl["Train_Accuracy"],
                                  train_f1_score=pipeline_evl["Train_F1_score"], train_log_loss=pipeline_evl["Train_Log_loss"], train_r_squared=pipeline_evl["Train_R_Squared"], train_rmse=pipeline_evl["Train_RMSE"],
