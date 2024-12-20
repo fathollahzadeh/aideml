@@ -12,7 +12,7 @@ def parse_arguments():
     parser.add_argument('--prompt-number-iteration', type=int, default=1)
     parser.add_argument('--output-path', type=str, default=None)
     parser.add_argument('--llm-model', type=str, default=None)
-    parser.add_argument('--result-output-path', type=str, default="/tmp/results.csv")
+    parser.add_argument('--result-output-path', type=str, default="/tmp/")
     parser.add_argument('--system-log', type=str, default="/tmp/catdb-system-log.dat")
 
     args = parser.parse_args()
@@ -89,15 +89,15 @@ if __name__ == '__main__':
            testing (with labels): {args.data_source_test_path}
            """
     exp = aide.Experiment(
-        data_dir=args.args.root_data_path,
+        data_dir=f"{args.root_data_path}/{args.dataset_name}",
         goal=goal,
-        log_dir=f"{args.output_path}/log/",
-        workspace_dir=f"{args.output_path}/workspace/",
+        log_dir=f"{args.result_output_path}/log/",
+        workspace_dir=f"{args.result_output_path}/workspace/",
         exp_name="EXP",
         iterations=1,
         eval=metric,
         dataset_name=args.dataset_name,
-        out_path=args.result_output_path,
+        out_path=args.output_path,
         task_type=args.task_type
     )
     exp.run(steps=args.prompt_number_iteration)
