@@ -100,4 +100,5 @@ if __name__ == '__main__':
         out_path=args.output_path,
         task_type=args.task_type
     )
-    exp.run(steps=args.prompt_number_iteration)
+    for i in range(1, args.prompt_number_iteration+1):
+        exp.run(steps=i)

@@ -71,15 +71,14 @@ class Experiment:
         )
 
     def run(self, steps: int):
-        for _i in range(steps):
             time_start = time.time()
             self.agent.step(exec_callback=self.interpreter.run)
             time_end = time.time()
             wait_time = self.journal.nodes[0].wait_time
             total_time = time_end - time_start - wait_time
             save_run(self.cfg, self.journal)
-            self.save_log(self.journal.nodes[0].term_out, step=_i+1, total_time=total_time, execution_time=self.journal.nodes[0].exec_time, tokens=self.journal.nodes[0].total_tokens_count)
-        self.interpreter.cleanup_session()
+            self.save_log(self.journal.nodes[0].term_out, step=steps, total_time=total_time, execution_time=self.journal.nodes[0].exec_time, tokens=self.journal.nodes[0].total_tokens_count)
+            self.interpreter.cleanup_session()
 
         # best_node = self.journal.get_best_node(only_good=False)
         # return Solution(code=best_node.code, valid_metric=best_node.metric.value)
